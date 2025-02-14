@@ -1,3 +1,4 @@
+import os
 from langchain_community.chat_models import ChatPerplexity
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferWindowMemory
@@ -19,7 +20,7 @@ def draft_email(user_input, name="User"):
     chat = ChatPerplexity(
         model="llama-3.1-sonar-small-128k-online",
         temperature=1,
-        pplx_api_key="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"
+        pplx_api_key=os.getenv("PPLX_API_KEY"),
     )
 
     # Define a system prompt that instructs the assistant to behave as a helpful conversational assistant.
