@@ -79,4 +79,4 @@ def slack_events():
 
 # Run the Flask app
 if __name__ == "__main__":
-    flask_app.run(debug=True)  # Added debug=True for development
+    flask_app.run()  # Added debug=True for development
