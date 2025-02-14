@@ -1,12 +1,10 @@
 import os
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-from slack_bolt.adapter.flask import SlackRequestHandler
 from slack_bolt import App
+from slack_bolt.adapter.flask import SlackRequestHandler  # Correct import
 from dotenv import find_dotenv, load_dotenv
 from flask import Flask, request, jsonify
-from functions import draft_email
-
 
 # Load environment variables from .env file
 load_dotenv(find_dotenv())
@@ -16,11 +14,11 @@ SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_SIGNING_SECRET = os.getenv("SLACK_SIGNING_SECRET")
 SLACK_BOT_USER_ID = os.getenv("SLACK_BOT_USER_ID")
 
-# Initialize the Bolt app
-app = App(token=SLACK_BOT_TOKEN)
-
 # Initialize the Flask app
 flask_app = Flask(__name__)
+
+# Initialize the Bolt app WITHIN the Flask app
+app = App(token=SLACK_BOT_TOKEN)
 handler = SlackRequestHandler(app)
 
 def get_bot_user_id():
@@ -69,14 +67,13 @@ def handle_mentions(body, say):
 
 @flask_app.route("/slack/events", methods=["POST"])
 def slack_events():
-    # Check if it's a URL verification request
-    if request.json and request.json.get("type") == "url_verification":
-        # Return the challenge value
-        return jsonify({"challenge": request.json["challenge"]})
-    
-    # If it's not a verification request, handle it with your existing code
+    """Handles incoming Slack events."""
     return handler.handle(request)
 
-# Run the Flask app
-if __name__ == "__main__":
-    flask_app.run()  # Added debug=True for development
+@flask_app.route("/") # Add a route for testing
+def hello_world():
+    return "Hello, World! Flask is running."
+
+# Run the Flask app - REMOVE FOR GUNICORN
+#if __name__ == "__main__":
+#    flask_app.run(debug=True, port=8000)
