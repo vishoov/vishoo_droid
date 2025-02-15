@@ -2,24 +2,24 @@ import os
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from slack_bolt import App
-from slack_bolt.adapter.flask import SlackRequestHandler  # Correct import
+from slack_bolt.adapter.flask import SlackRequestHandler 
 from dotenv import find_dotenv, load_dotenv
 from flask import Flask, request, jsonify
 from functions import draft_email
 
-# Load environment variables from .env file
+
 load_dotenv(find_dotenv())
 
-# Set Slack API credentials
+
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_SIGNING_SECRET = os.getenv("SLACK_SIGNING_SECRET")
 SLACK_BOT_USER_ID = os.getenv("SLACK_BOT_USER_ID")
 
-# Initialize the Flask app
+
 flask_app = Flask(__name__)
 
-# Initialize the Bolt app WITHIN the Flask app
-app = App(token=SLACK_BOT_TOKEN, signing_secret=SLACK_SIGNING_SECRET)  # Include signing_secret
+
+app = App(token=SLACK_BOT_TOKEN, signing_secret=SLACK_SIGNING_SECRET) 
 handler = SlackRequestHandler(app)
 
 
@@ -66,7 +66,7 @@ def handle_mentions(body, say):
     text = body["event"]["text"]
     mention = f"<@{SLACK_BOT_USER_ID}>"
     text = text.replace(mention, "").strip()
-    response = draft_email(text)  # Use the function
+    response = draft_email(text)
     say(response)
 
 
@@ -74,18 +74,18 @@ def handle_mentions(body, say):
 def slack_events():
     """Handles incoming Slack events, including the initial challenge."""
     if request.method == "POST":
-        # Check if it's a challenge request
+       
         if "challenge" in request.json:
             return jsonify({"challenge": request.json["challenge"]})
         else:
             return handler.handle(request)
 
 
-@flask_app.route("/")  # Add a route for testing
+@flask_app.route("/") 
 def hello_world():
     return "Hello, World! Flask is running."
 
 
-# # Run the Flask app - REMOVE FOR GUNICORN
+
 # if __name__ == "__main__":
 #    flask_app.run(debug=True, port=8000)
