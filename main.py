@@ -18,8 +18,9 @@ SLACK_BOT_USER_ID = os.getenv("SLACK_BOT_USER_ID")
 flask_app = Flask(__name__)
 
 # Initialize the Bolt app WITHIN the Flask app
-app = App(token=SLACK_BOT_TOKEN)
+app = App(token=SLACK_BOT_TOKEN, signing_secret=SLACK_SIGNING_SECRET)  # Include signing_secret
 handler = SlackRequestHandler(app)
+
 
 def get_bot_user_id():
     """
@@ -35,6 +36,7 @@ def get_bot_user_id():
     except SlackApiError as e:
         print(f"Error: {e}")
 
+
 def my_function(text):
     """
     Custom function to process the text and return a response.
@@ -49,6 +51,7 @@ def my_function(text):
     response = text.upper()
     return response
 
+
 @app.event("app_mention")
 def handle_mentions(body, say):
     """
@@ -62,18 +65,26 @@ def handle_mentions(body, say):
     text = body["event"]["text"]
     mention = f"<@{SLACK_BOT_USER_ID}>"
     text = text.replace(mention, "").strip()
-    response = draft_email(text)
+    response = my_function(text)  # Use the function
     say(response)
+
 
 @flask_app.route("/slack/events", methods=["POST"])
 def slack_events():
-    """Handles incoming Slack events."""
-    return handler.handle(request)
+    """Handles incoming Slack events, including the initial challenge."""
+    if request.method == "POST":
+        # Check if it's a challenge request
+        if "challenge" in request.json:
+            return jsonify({"challenge": request.json["challenge"]})
+        else:
+            return handler.handle(request)
 
-@flask_app.route("/") # Add a route for testing
+
+@flask_app.route("/")  # Add a route for testing
 def hello_world():
     return "Hello, World! Flask is running."
 
+
 # Run the Flask app - REMOVE FOR GUNICORN
-#if __name__ == "__main__":
+# if __name__ == "__main__":
 #    flask_app.run(debug=True, port=8000)
